@@ -1,4 +1,20 @@
-<html>
-    <p>Hi there!</p>
-    <p>It works!</p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP8266 Interface</title>
+    <script>
+        async function checkStatus() {
+            const response = await fetch('api.php'); // Ваш PHP-скрипт
+            const data = await response.json();
+            document.getElementById('status').innerText = data.status === 'success' ? 'ESP8266 подключен' : 'Неизвестный статус';
+        }
+
+        setInterval(checkStatus, 5000); // Проверка статуса каждые 5 секунд
+    </script>
+</head>
+<body>
+    <h1>Интерфейс ESP8266</h1>
+    <p id="status">Загрузка...</p>
+</body>
 </html>
