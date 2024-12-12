@@ -1,20 +1,32 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP8266 Interface</title>
+    <title>API Interface</title>
     <script>
-        async function checkStatus() {
-            const response = await fetch('api.php'); // Ваш PHP-скрипт
-            const data = await response.json();
-            document.getElementById('status').innerText = data.status === 'success' ? 'ESP8266 подключен' : 'Неизвестный статус';
-        }
+        async function sendData() {
+            const data = {
+                name: document.getElementById('name').value,
+                age: document.getElementById('age').value
+            };
 
-        setInterval(checkStatus, 5000); // Проверка статуса каждые 5 секунд
+            const response = await fetch('/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            console.log(result);
+        }
     </script>
 </head>
 <body>
-    <h1>Интерфейс ESP8266</h1>
-    <p id="status">Загрузка...</p>
+    <h1>Send Data to API</h1>
+    <input type="text" id="name" placeholder="Name">
+    <input type="number" id="age" placeholder="Age">
+    <button onclick="sendData()">Send</button>
 </body>
 </html>
