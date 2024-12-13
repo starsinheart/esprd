@@ -1,8 +1,7 @@
 from django.urls import path
-from .views import api_view, interface
 from . import views
 
 urlpatterns = [
-    path('', views.interface, name='interface'),
-    path('api/', views.api_view, name='api'),
+    path('post_data/', views.post_data, name='post_data'),
+    path('get_data/', views.get_data, name='get_data'),
 ]
