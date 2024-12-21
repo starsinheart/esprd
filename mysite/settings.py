@@ -55,7 +55,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'blog/templates'],  # Укажите путь к папке с шаблонами
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 from .models import SensorData
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
@@ -13,19 +14,23 @@ def post_data(request):
             data = json.loads(request.body)
             logger.info(f"Received data: {data}")
 
-            if 'sensor_value' not in data:
-                logger.warning("Missing sensor_value in request")
-                return JsonResponse({'status': 'error', 'message': 'Missing sensor_value'}, status=400)
-
-            # Сохранение данных в базе данных
-            SensorData.objects.create(sensor_value=data['sensor_value'])
+            # Сохранение команды в базе данных (опционально)
+            if 'command' in data:
+                # Здесь можно добавить логику для обработки команды
+                logger.info(f"Received command: {data['command']}")
 
             return JsonResponse({'status': 'success', 'received_data': data})
         except json.JSONDecodeError:
             logger.error("Invalid JSON received")
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-        
+
 def get_data(request):
-    # Retrieve data to send back to the ESP8266
-    response_data = {'command': 'turn_on_led'}
-    return JsonResponse(response_data)
+    # Получение данных сенсоров из базы данных
+    sensor_data = SensorData.objects.all().order_by('-timestamp')[:10]  # Последние 10 записей
+    data = [{'sensor_value': d.sensor_value, 'timestamp': d.timestamp} for d in sensor_data]
+
+    # Возвращение данных в формате JSON
+    return JsonResponse({'status': 'success', 'data': data})
+
+def interface(request):
+    return render(request, 'interface.html')

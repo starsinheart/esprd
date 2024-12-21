@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>API Interface</title>
+    <title>ESP8266 Interface</title>
     <script>
+        // Функция для отправки данных на сервер
         async function sendData() {
             const data = {
-                name: document.getElementById('name').value,
-                age: document.getElementById('age').value
+                command: document.getElementById('command').value,
+                value: document.getElementById('value').value
             };
 
             try {
@@ -28,15 +29,40 @@
                 console.error('Error sending data:', error);
             }
         }
+
+        // Функция для получения данных с сервера
+        async function fetchData() {
+            try {
+                const response = await fetch('/get_data/');
+                const result = await response.json();
+                console.log(result);
+
+                // Отображение данных на странице
+                document.getElementById('receivedData').innerText = JSON.stringify(result, null, 2);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Обновление данных каждые 5 секунд
+        setInterval(fetchData, 5000);
     </script>
 </head>
 <body>
-    <h1>Send Data to API</h1>
-    <input type="text" id="name" placeholder="Name">
-    <input type="number" id="age" placeholder="Age">
+    <h1>ESP8266 Interface</h1>
+
+    <!-- Форма для отправки данных -->
+    <h2>Send Command to ESP8266</h2>
+    <input type="text" id="command" placeholder="Command (e.g., turn_on_led)">
+    <input type="number" id="value" placeholder="Value (e.g., 1)">
     <button onclick="sendData()">Send</button>
 
-    <!-- Место для отображения ответа -->
+    <!-- Место для отображения ответа от сервера -->
+    <h2>Response from Server</h2>
     <pre id="response"></pre>
+
+    <!-- Место для отображения полученных данных -->
+    <h2>Received Data from ESP8266</h2>
+    <pre id="receivedData"></pre>
 </body>
 </html>
