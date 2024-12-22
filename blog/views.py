@@ -36,8 +36,13 @@ def post_sensor_data(request):
 
 def get_sensor_data(request):
     sensor_data = SensorData.objects.all().order_by('-timestamp')[:10]
-    data = [{'sensor_value': d.sensor_value, 'timestamp': d.timestamp.isoformat()} for d in sensor_data]
+    data = [{
+        'sensor_value_1': d.sensor_value_1,
+        'sensor_value_2': d.sensor_value_2,
+        'sensor_value_3': d.sensor_value_3,
+        'timestamp': d.timestamp.isoformat()
+    } for d in sensor_data]
     return JsonResponse({'status': 'success', 'data': data})
-
+    
 def interface(request):
     return render(request, 'interface.html')

@@ -5,7 +5,7 @@
     <title>ESP8266 Interface</title>
     <script>
         // Function to send commands to the server
-        function sendCommand() {
+        function sendCommand1() {
             const commandInput = document.getElementById('command');
             const valueInput = document.getElementById('value');
             const command = commandInput.value;
@@ -27,13 +27,31 @@
             })
             .catch(error => console.error('Error sending command:', error));
         }
-
+        function sendCommand2(command, value) {
+            fetch('/send_command/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: command, value: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error sending command:', error));
+        }
         // Function to fetch and display sensor data
         async function fetchSensorData() {
             try {
                 const response = await fetch('/get_sensor_data/');
                 const data = await response.json();
-                document.getElementById('sensorData').innerText = JSON.stringify(data, null, 2);
+                if (data.status === 'success' && data.data.length > 0) {
+                    const latestData = data.data[0];
+                    document.getElementById('sensorValue1').innerText = latestData.sensor_value_1;
+                    document.getElementById('sensorValue2').innerText = latestData.sensor_value_2;
+                    document.getElementById('sensorValue3').innerText = latestData.sensor_value_3;
+                }
             } catch (error) {
                 console.error('Error fetching sensor data:', error);
             }
@@ -48,11 +66,15 @@
 
     <!-- Form to send commands -->
     <h2>Send Command to ESP8266</h2>
-    <form onsubmit="event.preventDefault(); sendCommand();">
+    <form onsubmit="event.preventDefault(); sendCommand1();">
         <input type="text" id="command" placeholder="Command (e.g., turn_on_led)" required>
         <input type="number" id="value" placeholder="Value (e.g., 1)" required>
         <button type="submit">Send Command</button>
     </form>
+<!-- Buttons for sending specific commands -->
+<h2>Control LED</h2>
+<button onclick="sendCommand('turn_on_led', 1)">Turn On LED</button>
+<button onclick="sendCommand('turn_off_led', 1)">Turn Off LED</button>
 
     <!-- Display server response -->
     <h2>Server Response</h2>
@@ -60,6 +82,9 @@
 
     <!-- Display sensor data from ESP8266 -->
     <h2>ESP8266 Sensor Data</h2>
+    <p>Sensor 1 Value: <span id="sensorValue1"></span></p>
+    <p>Sensor 2 Value: <span id="sensorValue2"></span></p>
+    <p>Sensor 3 Value: <span id="sensorValue3"></span></p>
     <pre id="sensorData"></pre>
 </body>
 </html>
