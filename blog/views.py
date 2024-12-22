@@ -26,14 +26,31 @@ def get_commands(request):
 def post_sensor_data(request):
     if request.method == 'POST':
         try:
+            # Parse the JSON payload
             data = json.loads(request.body)
-            sensor_value = data.get('sensor_value')
-            sensor_data = SensorData(sensor_value=sensor_value)
+            sensor_values = data.get('sensor_values')
+
+            # Ensure the sensor_values array has exactly 3 values
+            if len(sensor_values) != 3:
+                return JsonResponse({'status': 'error', 'message': 'Invalid number of sensor values'}, status=400)
+
+            # Save the sensor data to the database
+            sensor_data = SensorData(
+                sensor_value_1=sensor_values[0],
+                sensor_value_2=sensor_values[1],
+                sensor_value_3=sensor_values[2]
+            )
             sensor_data.save()
+
+            # Return a success response
             return JsonResponse({'status': 'success', 'received_data': data})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-
+        except Exception as e:
+            # Log the error and return a 500 response
+            print(f"Error saving sensor data: {e}")
+            return JsonResponse({'status': 'error', 'message': 'Internal Server Error'}, status=500)
+            
 def get_sensor_data(request):
     sensor_data = SensorData.objects.all().order_by('-timestamp')[:10]
     data = [{
@@ -43,6 +60,6 @@ def get_sensor_data(request):
         'timestamp': d.timestamp.isoformat()
     } for d in sensor_data]
     return JsonResponse({'status': 'success', 'data': data})
-    
+
 def interface(request):
     return render(request, 'interface.html')
