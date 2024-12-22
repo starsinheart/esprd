@@ -4,65 +4,62 @@
     <meta charset="UTF-8">
     <title>ESP8266 Interface</title>
     <script>
-        // Функция для отправки данных на сервер
-        async function sendData() {
-            const data = {
-                command: document.getElementById('command').value,
-                value: document.getElementById('value').value
-            };
+        // Function to send commands to the server
+        function sendCommand() {
+            const commandInput = document.getElementById('command');
+            const valueInput = document.getElementById('value');
+            const command = commandInput.value;
+            const value = valueInput.value;
 
+            fetch('/send_command/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: command, value: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+                // Clear input fields after sending
+                commandInput.value = '';
+                valueInput.value = '';
+            })
+            .catch(error => console.error('Error sending command:', error));
+        }
+
+        // Function to fetch and display sensor data
+        async function fetchSensorData() {
             try {
-                const response = await fetch('/post_data/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                console.log(result);
-
-                // Отображение результата на странице
-                document.getElementById('response').innerText = JSON.stringify(result, null, 2);
+                const response = await fetch('/get_sensor_data/');
+                const data = await response.json();
+                document.getElementById('sensorData').innerText = JSON.stringify(data, null, 2);
             } catch (error) {
-                console.error('Error sending data:', error);
+                console.error('Error fetching sensor data:', error);
             }
         }
 
-        // Функция для получения данных с сервера
-        async function fetchData() {
-            try {
-                const response = await fetch('/get_data/');
-                const result = await response.json();
-                console.log(result);
-
-                // Отображение данных на странице
-                document.getElementById('receivedData').innerText = JSON.stringify(result, null, 2);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        }
-
-        // Обновление данных каждые 5 секунд
-        setInterval(fetchData, 5000);
+        // Fetch sensor data every 5 seconds
+        setInterval(fetchSensorData, 5000);
     </script>
 </head>
 <body>
     <h1>ESP8266 Interface</h1>
 
-    <!-- Форма для отправки данных -->
+    <!-- Form to send commands -->
     <h2>Send Command to ESP8266</h2>
-    <input type="text" id="command" placeholder="Command (e.g., turn_on_led)">
-    <input type="number" id="value" placeholder="Value (e.g., 1)">
-    <button onclick="sendData()">Send</button>
+    <form onsubmit="event.preventDefault(); sendCommand();">
+        <input type="text" id="command" placeholder="Command (e.g., turn_on_led)" required>
+        <input type="number" id="value" placeholder="Value (e.g., 1)" required>
+        <button type="submit">Send Command</button>
+    </form>
 
-    <!-- Место для отображения ответа от сервера -->
-    <h2>Response from Server</h2>
+    <!-- Display server response -->
+    <h2>Server Response</h2>
     <pre id="response"></pre>
 
-    <!-- Место для отображения полученных данных -->
-    <h2>Received Data from ESP8266</h2>
-    <pre id="receivedData"></pre>
+    <!-- Display sensor data from ESP8266 -->
+    <h2>ESP8266 Sensor Data</h2>
+    <pre id="sensorData"></pre>
 </body>
 </html>
