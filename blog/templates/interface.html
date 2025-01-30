@@ -43,23 +43,44 @@
         }
         // Function to fetch and display sensor data
         async function fetchSensorData() {
-            try {
-                const response = await fetch('/get_sensor_data/');
-                const data = await response.json();
-                if (data.status === 'success' && data.data.length > 0) {
-                    const latestData = data.data[0];
-                    document.getElementById('sensorValue1').innerText = latestData.sensor_value_1;
-                    document.getElementById('sensorValue2').innerText = latestData.sensor_value_2;
-                    document.getElementById('sensorValue3').innerText = latestData.sensor_value_3;
-                }
-            } catch (error) {
-                console.error('Error fetching sensor data:', error);
-            }
+    try {
+        const response = await fetch('/get_sensor_data/');
+        const data = await response.json();
+        if (data.status === 'success' && data.data.length > 0) {
+            const latestData = data.data[0];
+            
+            // Плавное обновление значений
+            animateValue('sensorValue1', latestData.sensor_value_1);
+            animateValue('sensorValue2', latestData.sensor_value_2);
+            animateValue('sensorValue3', latestData.sensor_value_3);
         }
+    } catch (error) {
+        console.error('Error fetching sensor data:', error);
+    }
+}
 
-        // Fetch sensor data every 5 seconds
-        setInterval(fetchSensorData, 5000);
-    </script>
+// Функция для плавной анимации чисел
+function animateValue(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    let current = parseFloat(element.innerText) || 0;
+    const delta = (newValue - current) / 10; // Скорость анимации
+
+    const update = () => {
+        current += delta;
+        if (Math.abs(newValue - current) < Math.abs(delta)) {
+            current = newValue;
+        } else {
+            requestAnimationFrame(update);
+        }
+        element.innerText = Math.round(current);
+    };
+    
+    requestAnimationFrame(update);
+}
+
+// Увеличим частоту опроса до 1 секунды
+setInterval(fetchSensorData, 1000);
+</script>
 </head>
 <body>
     <h1>ESP8266 Interface</h1>
