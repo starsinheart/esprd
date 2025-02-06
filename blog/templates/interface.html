@@ -1,236 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ESP8266 Interface</title>
-    <script>
-        // Function to send commands to the server
-        function sendCommand1() {
-            const commandInput = document.getElementById('command');
-            const valueInput = document.getElementById('value');
-            const command = commandInput.value;
-            const value = valueInput.value;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Автополив 🌿</title>
 
-            fetch('/send_command/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ command: command, value: value })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
-                // Clear input fields after sending
-                commandInput.value = '';
-                valueInput.value = '';
-            })
-            .catch(error => console.error('Error sending command:', error));
-        }
-        function sendCommand2(command, value) {
-            fetch('/send_command/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ command: command, value: value })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
-            })
-            .catch(error => console.error('Error sending command:', error));
-        }
-        // Function to fetch and display sensor data
-        async function fetchSensorData() {
-    try {
-        const response = await fetch('/get_sensor_data/');
-        const data = await response.json();
-        if (data.status === 'success' && data.data.length > 0) {
-            const latestData = data.data[0];
-            
-            // Плавное обновление значений
-            animateValue('sensorValue1', latestData.sensor_value_1);
-            animateValue('sensorValue2', latestData.sensor_value_2);
-            animateValue('sensorValue3', latestData.sensor_value_3);
-        }
-    } catch (error) {
-        console.error('Error fetching sensor data:', error);
-    }
-}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 
-// Функция для плавной анимации чисел
-function animateValue(elementId, newValue) {
-    const element = document.getElementById(elementId);
-    let current = parseFloat(element.innerText) || 0;
-    const delta = (newValue - current) / 10; // Скорость анимации
-
-    const update = () => {
-        current += delta;
-        if (Math.abs(newValue - current) < Math.abs(delta)) {
-            current = newValue;
-        } else {
-            requestAnimationFrame(update);
-        }
-        element.innerText = Math.round(current);
-    };
-    
-    requestAnimationFrame(update);
-}
-
-// Увеличим частоту опроса до 1 секунды
-setInterval(fetchSensorData, 1000);
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .sensor-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="container mt-4">
-    <h1 class="text-center mb-4">Автополив 🌿</h1>
+    <header>
+        <h1 class="text-center mb-4">Автополив 🌿</h1>
+    </header>
 
-    <div class="row">
+    <main>
         <!-- Карточки с данными -->
-        <div class="col-md-4">
-            <div class="sensor-card">
-                <h5>💧 Уровень воды</h5>
-                <h1 id="sensorValue1" class="display-4">0</h1>
+        <section class="row">
+            <div class="col-md-4">
+                <div class="sensor-card">
+                    <h5>💧 Уровень воды</h5>
+                    <h1 id="sensorValue1" class="display-4">0</h1>
+                </div>
             </div>
-        </div>
+            <div class="col-md-4">
+                <div class="sensor-card">
+                    <h5>🌱 Влажность почвы</h5>
+                    <h1 id="sensorValue2" class="display-4">0</h1>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="sensor-card">
+                    <h5>🔆 Освещенность</h5>
+                    <h1 id="sensorValue3" class="display-4">0</h1>
+                </div>
+            </div>
+        </section>
+
+        <!-- Панель управления -->
+        <section class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">Управление</h4>
+                <div class="btn-group" role="group">
+                    <button onclick="sendCommand('turn_on_led', 2)" class="btn btn-success">Включить насос ✅</button>
+                    <button onclick="sendCommand('turn_off_led', 2)" class="btn btn-danger">Выключить насос ❌</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button onclick="sendCommand('turn_on_led', 1)" class="btn btn-success">Включить лампу ✅</button>
+                    <button onclick="sendCommand('turn_off_led', 1)" class="btn btn-danger">Выключить лампу ❌</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Настройки порогов -->
+        <section class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">Настройки порогов</h4>
+                <div class="input-group mb-3">
+                    <input type="number" id="moistureThreshold" class="form-control" placeholder="Порог влажности">
+                    <button class="btn btn-primary" onclick="setThreshold('moistureThreshold')">Установить</button>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="number" id="waterThreshold" class="form-control" placeholder="Порог уровня воды">
+                    <button class="btn btn-primary" onclick="setThreshold('waterThreshold')">Установить</button>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="number" id="lightThreshold" class="form-control" placeholder="Порог освещенности">
+                    <button class="btn btn-primary" onclick="setThreshold('lightThreshold')">Установить</button>
+                </div>
+            </div>
+        </section>
+
         
-        <div class="col-md-4">
-            <div class="sensor-card">
-                <h5>🌱 Влажность почвы</h5>
-                <h1 id="sensorValue2" class="display-4">0</h1>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="sensor-card">
-                <h5>🔆 Освещенность</h5>
-                <h1 id="sensorValue3" class="display-4">0</h1>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <!-- Графики -->
-    <div class="chart-container">
-        <canvas id="sensorChart"></canvas>
-    </div>
-
-    <!-- Панель управления -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h4 class="card-title">Управление</h4>
-            
-            <div class="btn-group" role="group">
-                <button onclick="sendCommand2('turn_on_led', 1)" class="btn btn-success">
-                    Включить насос ✅
-                </button>
-                <button onclick="sendCommand2('turn_off_led', 1)" class="btn btn-danger">
-                    Выключить насос ❌
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Form to send commands -->
-    <h2>Send Command to ESP8266</h2>
-    <form onsubmit="event.preventDefault(); sendCommand1();">
-        <input type="text" id="command" placeholder="Command (e.g., turn_on_led)" required>
-        <input type="number" id="value" placeholder="Value (e.g., 1)" required>
-        <button type="submit">Send Command</button>
-    </form>
-<!-- Buttons for sending specific commands -->
-<h2>Control LED</h2>
-<button onclick="sendCommand2('turn_on_led', 1)">Turn On LED</button>
-<button onclick="sendCommand2('turn_off_led', 1)">Turn Off LED</button>
-
-    <!-- Display server response -->
-    <h2>Server Response</h2>
-    <pre id="response"></pre>
-
-    <!-- Display sensor data from ESP8266 -->
-    <h2>ESP8266 Sensor Data</h2>
-    <p>Sensor 1 Value: <span id="sensorValue1"></span></p>
-    <p>Sensor 2 Value: <span id="sensorValue2"></span></p>
-    <p>Sensor 3 Value: <span id="sensorValue3"></span></p>
-    <pre id="sensorData"></pre>
-
-    <h2>История показаний</h2>
     <canvas id="sensorChart" width="400" height="200"></canvas>
-
-    <script>
-        // Инициализация графика
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [], // Временные метки
-                datasets: [{
-                    label: 'Уровень воды',
-                    data: [],
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                },
-                {
-                    label: 'Влажность почвы',
-                    data: [],
-                    borderColor: 'rgb(255, 99, 132)',
-                    tension: 0.1
-                },
-                {
-                    label: 'Освещенность',
-                    data: [],
-                    borderColor: 'rgb(54, 162, 235)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Обновление графика при получении новых данных
-        async function updateChart() {
-            const response = await fetch('/get_sensor_data/');
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                const sensorData = data.data.slice(0, 20); // Последние 20 записей
-                
-                chart.data.labels = sensorData.map(d => 
-                    new Date(d.timestamp).toLocaleTimeString()
-                );
-                
-                chart.data.datasets[0].data = sensorData.map(d => d.sensor_value_1);
-                chart.data.datasets[1].data = sensorData.map(d => d.sensor_value_2);
-                chart.data.datasets[2].data = sensorData.map(d => d.sensor_value_3);
-                
-                chart.update();
-            }
-        }
-
-        // Обновлять график каждые 5 секунд
-        setInterval(updateChart, 5000);
-    </script>
+    <script src="scripts.js"></script>
 </body>
 </html>
