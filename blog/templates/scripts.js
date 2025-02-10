@@ -3,10 +3,12 @@ const SENSOR_DATA_URL = '/get_sensor_data/';
 
 // Отправка команды на сервер
 async function sendCommand(command, value) {
+    console.log(`Sending command: ${command}, value: ${value}`);  // Логирование
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            'X-CSRFToken': csrfToken,
             body: JSON.stringify({ command, value })
         });
         const data = await response.json();
